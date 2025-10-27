@@ -28,11 +28,14 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
   const [content, setContent] = useState<ReactNode | null>(null);
 
   const openModal = useCallback((modalContent: ReactNode) => {
+    console.log('ModalProvider openModal 호출됨:', modalContent);
     setContent(modalContent);
     setIsOpen(true);
+    console.log('ModalProvider 상태 업데이트 완료');
   }, []);
 
   const closeModal = useCallback(() => {
+    console.log('ModalProvider closeModal 호출됨');
     setIsOpen(false);
     setContent(null);
   }, []);
@@ -40,7 +43,12 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
   return (
     <ModalContext.Provider value={{ isOpen, content, openModal, closeModal }}>
       {children}
-      {isOpen && content}
+      {isOpen && (
+        <>
+          {console.log('ModalProvider 렌더링 - 모달 표시:', { isOpen, content })}
+          {content}
+        </>
+      )}
     </ModalContext.Provider>
   );
 };
