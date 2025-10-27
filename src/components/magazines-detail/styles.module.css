@@ -1,0 +1,107 @@
+/* Magazines Detail Component Styles */
+.container {
+  width: 852px;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+}
+
+/* Gap 1 */
+.gap1 {
+  width: 852px;
+  height: 132px;
+}
+
+/* Go to List Button */
+.goToListButton {
+  width: 852px;
+  height: 39px;
+  display: flex;
+  align-items: center;
+}
+
+.goToListButtonBottom {
+  width: 852px;
+  height: 53px;
+  display: flex;
+  align-items: center;
+}
+
+.listButton {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.listButton:hover {
+  color: #666;
+}
+
+/* Gap 2 */
+.gap2 {
+  width: 852px;
+  height: 32px;
+}
+
+/* Detail Image */
+.detailImage {
+  width: 852px;
+  height: 400px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagePlaceholder {
+  color: #999;
+  font-size: 18px;
+  text-align: center;
+}
+
+/* Detail Content */
+.detailContent {
+  width: 852px;
+  height: 1100px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.contentPlaceholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contentPlaceholder h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.contentPlaceholder p {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Gap 3 */
+.gap3 {
+  width: 852px;
+  height: 48px;
+}
+
+/* Gap 4 */
+.gap4 {
+  width: 852px;
+  height: 132px;
+}

@@ -1,5 +1,12 @@
 export enum Emotion {
-  GOOD = 'good',
-  BAD = 'bad',
-  NEUTRAL = 'neutral',
+  HAPPY = 'happy',
+  SAD = 'sad',
+  ANGRY = 'angry',
+  EXCITED = 'excited',
+  CALM = 'calm',
+  WORRIED = 'worried',
+  GRATEFUL = 'grateful',
+  LONELY = 'lonely',
+  CONFUSED = 'confused',
+  PEACEFUL = 'peaceful'
 }

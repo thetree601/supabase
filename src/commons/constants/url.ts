@@ -12,8 +12,6 @@ export interface UrlPath {
   path: string;
   /** 접근 가능 상태 */
   accessLevel: AccessLevel;
-  /** 헤더에 노출 가능 여부 */
-  showInHeader?: boolean;
   /** 다이나믹 라우팅 파라미터가 포함된 경로인지 여부 */
   isDynamic?: boolean;
 }
@@ -24,13 +22,11 @@ export const URL_PATHS = {
   LOGIN: {
     path: '/auth/login',
     accessLevel: 'public' as AccessLevel,
-    showInHeader: false,
     isDynamic: false,
   },
   SIGNUP: {
     path: '/auth/signup',
     accessLevel: 'public' as AccessLevel,
-    showInHeader: false,
     isDynamic: false,
   },
 
@@ -38,19 +34,16 @@ export const URL_PATHS = {
   MAGAZINES: {
     path: '/magazines',
     accessLevel: 'public' as AccessLevel,
-    showInHeader: true,
     isDynamic: false,
   },
   MAGAZINE_DETAIL: {
     path: '/magazines/[id]',
     accessLevel: 'member-only' as AccessLevel,
-    showInHeader: false,
     isDynamic: true,
   },
   MAGAZINE_NEW: {
     path: '/magazines/new',
     accessLevel: 'member-only' as AccessLevel,
-    showInHeader: false,
     isDynamic: false,
   },
 } as const;
@@ -86,14 +79,6 @@ export class UrlManager {
    */
   static getMagazineDetailUrl(id: string | number): string {
     return this.buildUrl(URL_PATHS.MAGAZINE_DETAIL, { id });
-  }
-
-  /**
-   * 헤더에 노출 가능한 URL 목록을 반환합니다.
-   * @returns 헤더 노출 가능한 URL 배열
-   */
-  static getHeaderUrls(): UrlPath[] {
-    return Object.values(URL_PATHS).filter(url => url.showInHeader);
   }
 
   /**

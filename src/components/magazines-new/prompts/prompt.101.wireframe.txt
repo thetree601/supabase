@@ -9,8 +9,8 @@
 
 ==============================================
 
-조건-파일경로) 구현될 TSX 파일경로: src/components/diaries-new/index.tsx
-조건-파일경로) 구현될 CSS 파일경로: src/components/diaries-new/styles.module.css
+조건-파일경로) 구현될 TSX 파일경로: src/components/magazines-new/index.tsx
+조건-파일경로) 구현될 CSS 파일경로: src/components/magazines-new/styles.module.css
 
 ==============================================
 
@@ -20,14 +20,12 @@
 핵심요구사항) HTML과 flexbox를 활용한 와이어프레임 구조만 만들어낼 것.
 
 핵심요구사항) 각 영역은 아래의 수치값을 그대로 반영하되, 부모와 자식 관계를 명확히 할 것. (단위: px)
-            1) 부모: {wrapper}: 640 * 560
+            1) 부모: {wrapper}: 652 * 1674
             2) 자식: 
-                - header: full * 24
+                - {gap}: full * 132
+                - go-to-list-button: full * 24
+                - {gap}: full * 32
+                - new post: full * 56
                 - {gap}: full * 40
-                - emotion-box: full * 64
-                - {gap}: full * 40
-                - input-title: full * 76
-                - {gap}: full * 24
-                - input-content: full * 156
-                - {gap}: full * 40
-                - footer: full * 48
+                - content: full * 1244
+                - {gap}: full * 132
