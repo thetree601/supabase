@@ -54,6 +54,8 @@ export const useDiaryDelete = () => {
   const showDeleteConfirmModal = useCallback(
     (diaryId: number) => {
       const modalContent = React.createElement(Modal, {
+        isOpen: true,
+        onClose: handleDeleteCancel,
         variant: "danger",
         actions: "dual",
         title: "일기 삭제",
