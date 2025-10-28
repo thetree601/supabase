@@ -46,6 +46,11 @@ export const URL_PATHS = {
     accessLevel: 'member-only' as AccessLevel,
     isDynamic: false,
   },
+  SUBSCRIBE: {
+    path: '/subscribe',
+    accessLevel: 'member-only' as AccessLevel,
+    isDynamic: false,
+  },
 } as const;
 
 // URL 헬퍼 함수들
@@ -136,6 +141,7 @@ export const LOGIN_URL = URL_PATHS.LOGIN.path;
 export const SIGNUP_URL = URL_PATHS.SIGNUP.path;
 export const MAGAZINES_URL = URL_PATHS.MAGAZINES.path;
 export const MAGAZINE_NEW_URL = URL_PATHS.MAGAZINE_NEW.path;
+export const SUBSCRIBE_URL = URL_PATHS.SUBSCRIBE.path;
 
 // 다이나믹 URL 생성 함수들
 export const getMagazineDetailUrl = UrlManager.getMagazineDetailUrl.bind(UrlManager);
