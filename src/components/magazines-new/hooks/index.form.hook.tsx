@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { MAGAZINES_URL } from '@/commons/constants/url';
+import { useMagazineSubmit } from '@/app/magazines/new/hooks/index.submit.hook';
 
 // 폼 스키마 정의
 const magazineFormSchema = z.object({
@@ -21,6 +22,7 @@ type MagazineFormData = z.infer<typeof magazineFormSchema>;
 
 export const useMagazineForm = () => {
   const router = useRouter();
+  const { submit } = useMagazineSubmit();
 
   const form = useForm<MagazineFormData>({
     resolver: zodResolver(magazineFormSchema),
@@ -72,7 +74,7 @@ export const useMagazineForm = () => {
 
   const onSubmit = (data: MagazineFormData) => {
     console.log('폼 제출 데이터:', data);
-    // TODO: Supabase 연동 후 실제 저장 로직 구현 예정
+    void submit(data);
   };
 
   const goToList = () => {

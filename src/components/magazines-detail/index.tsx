@@ -11,6 +11,58 @@ interface MagazinesDetailProps {
 export default function MagazinesDetail({ id }: MagazinesDetailProps) {
   const { magazine, loading, error, goToList } = useMagazineDetailBinding(id);
 
+  const getCategoryBadgeBg = (category: string): string => {
+    const key = (category || '').trim().toLowerCase();
+    const synonymToId: Record<string, 'frontend' | 'backend' | 'mobile' | 'devops' | 'aiml' | 'other'> = {
+      // 프론트엔드
+      '프론트엔드': 'frontend',
+      'frontend': 'frontend',
+      // 백엔드
+      '백엔드': 'backend',
+      'backend': 'backend',
+      // 모바일
+      '모바일': 'mobile',
+      'mobile': 'mobile',
+      // 데브옵스
+      '데브옵스': 'devops',
+      'devops': 'devops',
+      // 인공지능/머신러닝
+      '인공지능': 'aiml',
+      '머신러닝': 'aiml',
+      'ai': 'aiml',
+      'ai/ml': 'aiml',
+      'aiml': 'aiml',
+    };
+    const id = synonymToId[key] ?? 'other';
+    switch (id) {
+      case 'frontend':
+        return 'rgba(59, 130, 246, 0.9)'; // #3b82f6
+      case 'backend':
+        return 'rgba(34, 197, 94, 0.9)'; // #22c55e
+      case 'mobile':
+        return 'rgba(236, 72, 153, 0.9)'; // #ec4899
+      case 'devops':
+        return 'rgba(99, 102, 241, 0.9)'; // #6366f1
+      case 'aiml':
+        return 'rgba(139, 92, 246, 0.9)'; // #8b5cf6
+      default:
+        return 'rgba(17, 24, 39, 0.85)';
+    }
+  };
+
+  const getCategoryDisplayLabel = (category: string): string => {
+    const original = (category || '').trim();
+    const key = original.toLowerCase();
+    const enToKo: Record<string, string> = {
+      frontend: '프론트엔드',
+      backend: '백엔드',
+      mobile: '모바일',
+      devops: '데브옵스',
+      aiml: '인공지능',
+    };
+    return enToKo[key] ?? original;
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -69,6 +121,14 @@ export default function MagazinesDetail({ id }: MagazinesDetailProps) {
       <div className={styles.articleContainer}>
         {/* Detail Image */}
         <div className={styles.detailImage}>
+          {magazine.category && (
+            <div
+              className={styles.categoryBadge}
+              style={{ backgroundColor: getCategoryBadgeBg(magazine.category) }}
+            >
+              {getCategoryDisplayLabel(magazine.category)}
+            </div>
+          )}
           <Image 
             src={magazine.image} 
             alt={magazine.title} 
@@ -76,6 +136,7 @@ export default function MagazinesDetail({ id }: MagazinesDetailProps) {
             height={400} 
             className={styles.headerImage}
             style={{ objectFit: 'cover' }}
+            unoptimized
           />
         </div>
 

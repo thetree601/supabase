@@ -153,6 +153,7 @@
   background-color: #f3f4f6;
   padding: 0 !important;
   margin: 0 !important;
+  position: relative;
 }
 
 .articleImage {
@@ -202,5 +203,17 @@
   font-size: 12px;
   font-weight: 400;
   color: #666666;
+  line-height: 18px;
+}
+
+.categoryBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 10px;
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 18px;
 }
