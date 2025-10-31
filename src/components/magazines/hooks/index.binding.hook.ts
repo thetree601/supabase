@@ -44,7 +44,14 @@ export const useMagazinesBinding = (): UseMagazinesBindingReturn => {
         }
 
         if (!aborted) {
-          const normalized = (data ?? []).map((row: any) => ({
+          const normalized = (data ?? []).map((row: {
+            id: string;
+            image_url: string | null;
+            category: string | null;
+            title: string | null;
+            description: string | null;
+            tags: string[] | null;
+          }) => ({
             id: String(row.id),
             image_url: row.image_url ?? '',
             category: row.category ?? '',
@@ -55,9 +62,10 @@ export const useMagazinesBinding = (): UseMagazinesBindingReturn => {
 
           setMagazines(normalized);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!aborted) {
-          setError(e?.message ?? '데이터 조회 중 오류가 발생했습니다.');
+          const errorMessage = e instanceof Error ? e.message : '데이터 조회 중 오류가 발생했습니다.';
+          setError(errorMessage);
         }
       } finally {
         if (!aborted) {

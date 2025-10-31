@@ -80,7 +80,7 @@ export const useMagazineDetailBinding = (id: string) => {
 
         setMagazine(mapped);
         setLoading(false);
-      } catch (e) {
+      } catch {
         setError('데이터를 불러오는 중 오류가 발생했습니다.');
         setLoading(false);
       }
