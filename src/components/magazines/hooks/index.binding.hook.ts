@@ -7,6 +7,7 @@ import { getMagazineDetailUrl } from '@/commons/constants/url';
 
 export interface MagazineListItem {
   id: string; // uuid
+  image_url: string;
   category: string;
   title: string;
   description: string;
@@ -35,7 +36,7 @@ export const useMagazinesBinding = (): UseMagazinesBindingReturn => {
       try {
         const { data, error: fetchError } = await supabaseClient
           .from('magazine')
-          .select('id, category, title, description, tags')
+          .select('id, image_url, category, title, description, tags')
           .limit(10);
 
         if (fetchError) {
@@ -45,6 +46,7 @@ export const useMagazinesBinding = (): UseMagazinesBindingReturn => {
         if (!aborted) {
           const normalized = (data ?? []).map((row: any) => ({
             id: String(row.id),
+            image_url: row.image_url ?? '',
             category: row.category ?? '',
             title: row.title ?? '',
             description: row.description ?? '',

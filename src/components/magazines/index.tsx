@@ -132,7 +132,7 @@ export default function Magazines() {
                   </div>
                 )}
                 <Image 
-                  src="/icons/picture.png" 
+                  src={magazine.image_url && magazine.image_url.trim().length > 0 ? magazine.image_url : "/icons/picture.png"}
                   alt={magazine.title}
                   width={323}
                   height={200}

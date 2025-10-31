@@ -18,3 +18,5 @@ export const supabaseClient = (() => {
 export default supabaseClient;
 
 
+
+
