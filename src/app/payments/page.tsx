@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePayment } from "./hooks/index.payment.hook";
 
-export default function SubscribePage() {
+export default function PaymentsPage() {
   const router = useRouter();
   const { handleSubscribe } = usePayment();
 
@@ -77,3 +77,4 @@ export default function SubscribePage() {
     </div>
   );
 }
+

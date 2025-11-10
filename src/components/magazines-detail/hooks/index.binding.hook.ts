@@ -80,8 +80,17 @@ export const useMagazineDetailBinding = (id: string) => {
 
         setMagazine(mapped);
         setLoading(false);
-      } catch {
-        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      } catch (e: unknown) {
+        let errorMessage = '데이터를 불러오는 중 오류가 발생했습니다.';
+        if (e instanceof Error) {
+          errorMessage = e.message;
+          // DNS 해석 실패나 네트워크 오류인 경우 더 명확한 메시지
+          if (e.message.includes('Failed to fetch') || e.message.includes('ERR_NAME_NOT_RESOLVED') || e.message.includes('network')) {
+            errorMessage = 'Supabase 서버에 연결할 수 없습니다. 프로젝트 URL을 확인해주세요.';
+          }
+        }
+        console.error('Magazine 상세 조회 오류:', e);
+        setError(errorMessage);
         setLoading(false);
       }
     };

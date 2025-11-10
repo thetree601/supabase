@@ -79,7 +79,15 @@ export default function Magazines() {
     return (
       <div className={styles.container}>
         <div className={styles.gap}></div>
-        <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>{error}</div>
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '50px', 
+          color: 'red',
+          whiteSpace: 'pre-line',
+          lineHeight: '1.6'
+        }}>
+          {error}
+        </div>
         <div className={styles.gap}></div>
       </div>
     );
@@ -106,7 +114,10 @@ export default function Magazines() {
               <Image src="/icons/write.png" alt="글쓰기" width={18} height={18} className={styles.buttonIcon} />
               글쓰기
             </button>
-            <button className={styles.subscribeButton}>
+            <button 
+              className={styles.subscribeButton}
+              onClick={() => router.push('/subscribe')}
+            >
               <Image src="/icons/subscribe.png" alt="구독하기" width={18} height={18} className={styles.buttonIcon} />
               구독하기
             </button>

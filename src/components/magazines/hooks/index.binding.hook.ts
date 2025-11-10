@@ -64,7 +64,23 @@ export const useMagazinesBinding = (): UseMagazinesBindingReturn => {
         }
       } catch (e: unknown) {
         if (!aborted) {
-          const errorMessage = e instanceof Error ? e.message : '데이터 조회 중 오류가 발생했습니다.';
+          let errorMessage = '데이터 조회 중 오류가 발생했습니다.';
+          if (e instanceof Error) {
+            errorMessage = e.message;
+            // DNS 해석 실패나 네트워크 오류인 경우 더 명확한 메시지
+            const errorStr = String(e.message || '');
+            const errorDetails = (e as Error & { details?: string })?.details || '';
+            if (
+              errorStr.includes('Failed to fetch') || 
+              errorStr.includes('ERR_NAME_NOT_RESOLVED') || 
+              errorStr.includes('network') ||
+              errorDetails.includes('ERR_NAME_NOT_RESOLVED') ||
+              errorDetails.includes('Failed to fetch')
+            ) {
+              errorMessage = 'Supabase 서버에 연결할 수 없습니다.\n프로젝트가 삭제되었거나 일시 중지되었을 수 있습니다.\nSupabase 대시보드에서 프로젝트 상태를 확인해주세요.';
+            }
+          }
+          console.error('Magazines 조회 오류:', e);
           setError(errorMessage);
         }
       } finally {
