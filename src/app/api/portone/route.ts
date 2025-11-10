@@ -7,15 +7,19 @@ import { createHash } from "crypto";
  * PortOne v2를 사용한 구독 결제 완료 처리 및 다음달 구독 예약 API
  */
 export async function POST(request: NextRequest) {
+  let requestBody: { payment_id?: string; tx_id?: string; status?: string } | null = null;
   try {
     // 1. 요청 데이터 파싱
     const body = await request.json();
-    const { payment_id, status } = body;
+    requestBody = body; // 에러 핸들링을 위해 저장
+    const { payment_id, tx_id, status } = body;
 
     // 1-1. 필수 데이터 검증
-    if (!payment_id || !status) {
+    // payment_id 또는 tx_id 중 하나는 있어야 함
+    const actualPaymentId = payment_id || tx_id;
+    if (!actualPaymentId || !status) {
       return NextResponse.json(
-        { success: false, error: "payment_id와 status가 필요합니다." },
+        { success: false, error: "payment_id(또는 tx_id)와 status가 필요합니다." },
         { status: 400 }
       );
     }
@@ -52,7 +56,7 @@ export async function POST(request: NextRequest) {
     if (status === "Paid") {
       // 2-1. paymentId의 결제정보를 조회
       const paymentResponse = await fetch(
-        `https://api.portone.io/payments/${encodeURIComponent(payment_id)}`,
+        `https://api.portone.io/payments/${encodeURIComponent(actualPaymentId)}`,
         {
           method: "GET",
           headers: {
@@ -63,8 +67,18 @@ export async function POST(request: NextRequest) {
       );
 
       if (!paymentResponse.ok) {
-        const errorData = await paymentResponse.json();
-        console.error("PortOne 결제 조회 실패:", errorData);
+        const errorText = await paymentResponse.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText };
+        }
+        console.error("PortOne 결제 조회 실패:", {
+          paymentId: actualPaymentId,
+          status: paymentResponse.status,
+          error: errorData,
+        });
         return NextResponse.json(
           {
             success: false,
@@ -110,7 +124,7 @@ export async function POST(request: NextRequest) {
       // next_schedule_id: 동기화되는 UUID 생성 (payment_id 기반)
       // payment_id를 기반으로 일관된 UUID 생성 (랜덤이 아닌 동기화되는 값)
       const hash = createHash("sha256")
-        .update(`schedule_${payment_id}`)
+        .update(`schedule_${actualPaymentId}`)
         .digest("hex");
       // UUID 형식으로 변환 (8-4-4-4-12)
       const nextScheduleId = `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
@@ -119,7 +133,7 @@ export async function POST(request: NextRequest) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
       const { error: insertError } = await supabase.from("payment").insert({
-        transaction_key: payment_id,
+        transaction_key: actualPaymentId,
         amount: amount,
         status: "Paid",
         start_at: startAt.toISOString(),
@@ -130,7 +144,11 @@ export async function POST(request: NextRequest) {
       });
 
       if (insertError) {
-        console.error("Supabase 저장 실패:", insertError);
+        console.error("Supabase 저장 실패:", {
+          error: insertError,
+          paymentId: actualPaymentId,
+          amount,
+        });
         return NextResponse.json(
           {
             success: false,
@@ -171,8 +189,18 @@ export async function POST(request: NextRequest) {
       );
 
       if (!scheduleResponse.ok) {
-        const scheduleError = await scheduleResponse.json();
-        console.error("PortOne 구독 예약 실패:", scheduleError);
+        const scheduleErrorText = await scheduleResponse.text();
+        let scheduleError;
+        try {
+          scheduleError = JSON.parse(scheduleErrorText);
+        } catch {
+          scheduleError = { message: scheduleErrorText };
+        }
+        console.error("PortOne 구독 예약 실패:", {
+          nextScheduleId,
+          status: scheduleResponse.status,
+          error: scheduleError,
+        });
         // 예약 실패해도 이미 payment는 저장되었으므로 경고만 로깅
         console.warn(
           "다음달 구독 예약에 실패했지만, 현재 결제 정보는 저장되었습니다."
@@ -185,11 +213,16 @@ export async function POST(request: NextRequest) {
       success: true,
     });
   } catch (error) {
-    console.error("API 처리 중 오류:", error);
+    console.error("API 처리 중 오류:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      body: requestBody,
+    });
     return NextResponse.json(
       {
         success: false,
         error: "서버 오류가 발생했습니다.",
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
