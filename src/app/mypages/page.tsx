@@ -20,7 +20,7 @@ const mockUserData: UserProfile = {
   subscriptionStatus: "subscribed",
   joinDate: "2024.03",
   // 실제로는 결제 완료 시 받은 transactionKey를 저장하여 사용
-  transactionKey: "payment_1762786721358_qpanphk"
+  transactionKey: "payment_1762829383600_ytrmopi"
 };
 
 function GlossaryMagazinesMypage() {
