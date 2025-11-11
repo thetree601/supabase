@@ -28,7 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script src="https://cdn.portone.io/v2/browser-sdk.js" strategy="beforeInteractive" />
+        <Script 
+          src="https://cdn.portone.io/v2/browser-sdk.js" 
+          strategy="beforeInteractive"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

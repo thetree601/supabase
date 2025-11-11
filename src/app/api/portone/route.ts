@@ -12,14 +12,34 @@ export async function POST(request: NextRequest) {
     // 1. 요청 데이터 파싱
     const body = await request.json();
     requestBody = body; // 에러 핸들링을 위해 저장
+    
+    // 디버깅: 받은 데이터 로깅
+    console.log("포트원 웹훅 수신 데이터:", JSON.stringify(body, null, 2));
+    
     const { payment_id, tx_id, status } = body;
 
     // 1-1. 필수 데이터 검증
     // payment_id 또는 tx_id 중 하나는 있어야 함
     const actualPaymentId = payment_id || tx_id;
+    
+    console.log("검증 데이터:", {
+      payment_id,
+      tx_id,
+      actualPaymentId,
+      status,
+      hasPaymentId: !!payment_id,
+      hasTxId: !!tx_id,
+      hasStatus: !!status,
+    });
+    
     if (!actualPaymentId || !status) {
+      console.error("필수 데이터 누락:", {
+        actualPaymentId,
+        status,
+        body,
+      });
       return NextResponse.json(
-        { success: false, error: "payment_id(또는 tx_id)와 status가 필요합니다." },
+        { success: false, error: "payment_id(또는 tx_id)와 status가 필요합니다.", received: body },
         { status: 400 }
       );
     }
@@ -90,18 +110,46 @@ export async function POST(request: NextRequest) {
       }
 
       const paymentInfo = await paymentResponse.json();
+      
+      console.log("PortOne 결제 정보 조회 성공:", {
+        paymentId: actualPaymentId,
+        hasAmount: !!paymentInfo.amount,
+        hasBillingKey: !!paymentInfo.billingKey,
+        hasOrderName: !!paymentInfo.order?.name,
+        hasCustomerId: !!paymentInfo.customer?.id,
+      });
 
       // 결제정보에서 필요한 데이터 추출
       const amount = paymentInfo.amount?.total || paymentInfo.amount;
       const billingKey = paymentInfo.billingKey;
       const orderName = paymentInfo.order?.name || paymentInfo.orderName;
       const customerId = paymentInfo.customer?.id;
+      
+      console.log("추출된 데이터:", {
+        amount,
+        billingKey,
+        orderName,
+        customerId,
+      });
 
       if (!amount || !billingKey || !orderName || !customerId) {
+        console.error("결제 정보 필수 데이터 누락:", {
+          amount,
+          billingKey,
+          orderName,
+          customerId,
+          paymentInfo,
+        });
         return NextResponse.json(
           {
             success: false,
             error: "결제 정보에 필수 데이터가 누락되었습니다.",
+            missing: {
+              amount: !amount,
+              billingKey: !billingKey,
+              orderName: !orderName,
+              customerId: !customerId,
+            },
           },
           { status: 400 }
         );
@@ -131,8 +179,8 @@ export async function POST(request: NextRequest) {
 
       // 2-3. Supabase에 payment 테이블에 데이터 등록
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-      const { error: insertError } = await supabase.from("payment").insert({
+      
+      const insertData = {
         transaction_key: actualPaymentId,
         amount: amount,
         status: "Paid",
@@ -141,7 +189,11 @@ export async function POST(request: NextRequest) {
         end_grace_at: endGraceAt.toISOString(),
         next_schedule_at: nextScheduleAt.toISOString(),
         next_schedule_id: nextScheduleId,
-      });
+      };
+      
+      console.log("Supabase 저장 시도:", insertData);
+
+      const { error: insertError } = await supabase.from("payment").insert(insertData);
 
       if (insertError) {
         console.error("Supabase 저장 실패:", {
