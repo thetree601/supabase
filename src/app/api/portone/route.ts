@@ -164,9 +164,9 @@ export async function POST(request: NextRequest) {
       const endAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30일
       const endGraceAt = new Date(now.getTime() + 31 * 24 * 60 * 60 * 1000); // +31일
 
-      // next_schedule_at: end_at + 1일 오전 10시~11시 사이 임의 시각
+      // next_schedule_at: end_at + 1일 UTC 오전 1시~2시 사이 임의 시각
       const nextScheduleBase = new Date(endAt.getTime() + 24 * 60 * 60 * 1000); // end_at + 1일
-      nextScheduleBase.setHours(10, 0, 0, 0); // 오전 10시로 설정
+      nextScheduleBase.setUTCHours(1, 0, 0, 0); // UTC 오전 1시로 설정
       const randomMinutes = Math.floor(Math.random() * 60); // 0~59분 사이 랜덤
       const nextScheduleAt = new Date(
         nextScheduleBase.getTime() + randomMinutes * 60 * 1000

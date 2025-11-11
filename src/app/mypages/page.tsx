@@ -1,8 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { usePaymentCancel } from "./hooks/index.payment.cancel.hook";
+import { usePaymentStatus } from "./hooks/index.payment.status.hook";
 
 interface UserProfile {
   profileImage: string;
@@ -25,18 +25,12 @@ const mockUserData: UserProfile = {
 
 function GlossaryMagazinesMypage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile>(mockUserData);
-  const { cancelPayment, isLoading } = usePaymentCancel();
+  const user = mockUserData;
+  const { cancelPayment, isLoading: isCancelLoading } = usePaymentCancel();
+  const { subscriptionStatus, transactionKey, isLoading: isStatusLoading } = usePaymentStatus();
 
   const handleBackToList = () => {
     router.push('/magazines');
-  };
-
-  const handleSubscriptionToggle = () => {
-    setUser((prev: UserProfile) => ({
-      ...prev,
-      subscriptionStatus: prev.subscriptionStatus === "subscribed" ? "unsubscribed" : "subscribed"
-    }));
   };
 
   const handleCancelSubscription = async () => {
@@ -45,26 +39,30 @@ function GlossaryMagazinesMypage() {
     }
 
     // transactionKey가 없는 경우 처리
-    if (!user.transactionKey) {
+    if (!transactionKey) {
       alert("결제 정보를 찾을 수 없습니다.");
       return;
     }
 
     // 포트원 결제 취소 API 호출
-    const result = await cancelPayment(user.transactionKey);
+    const result = await cancelPayment(transactionKey);
     
-    // 성공 시 로컬 상태 업데이트 (알림 및 페이지 이동은 hook에서 처리)
+    // 성공 시 페이지 새로고침하여 상태 재조회 (hook에서 자동으로 상태가 업데이트됨)
     if (result.success) {
-      setUser((prev: UserProfile) => ({
-        ...prev,
-        subscriptionStatus: "unsubscribed"
-      }));
+      // hook에서 자동으로 상태가 업데이트되므로 별도 처리 불필요
     } else if (result.error) {
       alert(`구독 취소 실패: ${result.error}`);
     }
   };
 
-  const isSubscribed = user.subscriptionStatus === "subscribed";
+  const handleSubscribe = () => {
+    // 구독하기 버튼 클릭 시 구독 페이지로 이동
+    router.push("/subscribe");
+  };
+
+  // hook에서 가져온 구독 상태 사용 (로딩 중이면 기본값 "free" 사용)
+  const isSubscribed = !isStatusLoading && subscriptionStatus === "subscribed";
+  const isLoading = isStatusLoading || isCancelLoading;
 
   return (
     <div className="mypage-wrapper">
@@ -97,8 +95,10 @@ function GlossaryMagazinesMypage() {
         <div className={`mypage-subscription-card ${isSubscribed ? 'active' : ''}`}>
           <div className="mypage-subscription-header">
             <h3 className="mypage-card-title">구독 플랜</h3>
-            {isSubscribed && (
+            {isSubscribed ? (
               <span className="mypage-badge-active">구독중</span>
+            ) : (
+              <span className="mypage-badge-inactive">Free</span>
             )}
           </div>
 
@@ -145,9 +145,10 @@ function GlossaryMagazinesMypage() {
               </div>
               <button 
                 className="mypage-subscribe-btn"
-                onClick={handleSubscriptionToggle}
+                onClick={handleSubscribe}
+                disabled={isLoading}
               >
-                지금 구독하기
+                {isLoading ? "로딩중..." : "지금 구독하기"}
               </button>
             </div>
           )}
