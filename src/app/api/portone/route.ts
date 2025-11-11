@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createHash } from "crypto";
+import axios from "axios";
 
 /**
  * POST /api/portone
  * PortOne v2를 사용한 구독 결제 완료 처리 및 다음달 구독 예약 API
+ * Paid 시나리오: 결제 완료 처리 및 다음달 구독 예약
+ * Cancelled 시나리오: 결제 취소 처리 및 다음달 구독 예약 취소
  */
 export async function POST(request: NextRequest) {
   let requestBody: { payment_id?: string; tx_id?: string; status?: string } | null = null;
@@ -260,7 +263,206 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4. 성공 응답 반환
+    // 4. 구독결제취소시나리오 (status === "Cancelled")
+    if (status === "Cancelled") {
+      // 4-1. paymentId의 결제정보를 조회
+      const paymentResponse = await fetch(
+        `https://api.portone.io/payments/${encodeURIComponent(actualPaymentId)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `PortOne ${PORTONE_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!paymentResponse.ok) {
+        const errorText = await paymentResponse.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText };
+        }
+        console.error("PortOne 결제 조회 실패:", {
+          paymentId: actualPaymentId,
+          status: paymentResponse.status,
+          error: errorData,
+        });
+        return NextResponse.json(
+          {
+            success: false,
+            error: "결제 정보 조회 중 오류가 발생했습니다.",
+            details: errorData,
+          },
+          { status: paymentResponse.status }
+        );
+      }
+
+      const paymentInfo = await paymentResponse.json();
+      console.log("PortOne 결제 정보 조회 성공 (취소):", {
+        paymentId: actualPaymentId,
+        hasBillingKey: !!paymentInfo.billingKey,
+      });
+
+      // 4-2. Supabase에서 기존 결제 정보 조회
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      console.log("Supabase에서 기존 결제 정보 조회 중...");
+      const { data: existingPayment, error: selectError } = await supabase
+        .from("payment")
+        .select("*")
+        .eq("transaction_key", actualPaymentId)
+        .eq("status", "Paid")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (selectError || !existingPayment) {
+        console.error("기존 결제 정보 조회 실패:", selectError);
+        return NextResponse.json(
+          {
+            success: false,
+            error: "취소할 결제 정보를 찾을 수 없습니다.",
+            details: selectError?.message,
+          },
+          { status: 404 }
+        );
+      }
+
+      console.log("기존 결제 정보 조회 성공:", existingPayment);
+
+      // 4-3. Supabase payment 테이블에 취소 레코드 저장
+      console.log("Supabase에 취소 정보 저장 중...");
+      const { data: cancelRecord, error: cancelInsertError } = await supabase
+        .from("payment")
+        .insert({
+          transaction_key: existingPayment.transaction_key,
+          amount: -existingPayment.amount, // 음수로 저장
+          status: "Cancel",
+          start_at: existingPayment.start_at,
+          end_at: existingPayment.end_at,
+          end_grace_at: existingPayment.end_grace_at,
+          next_schedule_at: existingPayment.next_schedule_at,
+          next_schedule_id: existingPayment.next_schedule_id,
+        })
+        .select()
+        .single();
+
+      if (cancelInsertError) {
+        console.error("Supabase 취소 정보 저장 실패:", cancelInsertError);
+        return NextResponse.json(
+          {
+            success: false,
+            error: "결제 취소 정보 저장 중 오류가 발생했습니다.",
+            details: cancelInsertError.message,
+          },
+          { status: 500 }
+        );
+      }
+
+      console.log("Supabase 취소 정보 저장 성공:", cancelRecord);
+
+      // 4-4. 포트원에 다음 달 구독 예약 취소
+      const billingKey = paymentInfo.billingKey;
+      if (existingPayment.next_schedule_id && billingKey) {
+        console.log("다음 달 구독 예약 취소 중...");
+
+        // 4-4-1. 예약된 결제정보 조회
+        // next_schedule_at의 전후 1일 범위로 필터링
+        const nextScheduleAt = new Date(existingPayment.next_schedule_at);
+        const fromDate = new Date(nextScheduleAt);
+        fromDate.setDate(fromDate.getDate() - 1);
+        const untilDate = new Date(nextScheduleAt);
+        untilDate.setDate(untilDate.getDate() + 1);
+
+        console.log("예약된 결제정보 조회 중:", {
+          billingKey: billingKey,
+          from: fromDate.toISOString(),
+          until: untilDate.toISOString(),
+        });
+
+        // axios 사용: GET + body 지원 (표준은 아니지만 포트원 API 스펙)
+        try {
+          const schedulesResponse = await axios.get(
+            `https://api.portone.io/payment-schedules`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `PortOne ${PORTONE_API_SECRET}`,
+              },
+              data: {
+                filter: {
+                  billingKey: billingKey,
+                  from: fromDate.toISOString(),
+                  until: untilDate.toISOString(),
+                },
+              },
+            }
+          );
+
+          const schedulesData = schedulesResponse.data;
+          console.log("예약 정보 조회 성공:", schedulesData);
+
+          // 4-4-2. items를 순회하여 schedule 객체의 id 추출
+          interface PaymentScheduleItem {
+            id: string;
+            paymentId: string;
+            [key: string]: unknown;
+          }
+
+          const scheduleToCancel = schedulesData.items?.find(
+            (item: PaymentScheduleItem) =>
+              item.paymentId === existingPayment.next_schedule_id
+          );
+
+          if (scheduleToCancel) {
+            console.log("취소할 스케줄 발견:", scheduleToCancel.id);
+
+            // 4-4-3. 포트원에 다음달 구독예약 취소
+            const deleteScheduleResponse = await fetch(
+              `https://api.portone.io/payment-schedules`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `PortOne ${PORTONE_API_SECRET}`,
+                },
+                body: JSON.stringify({
+                  scheduleIds: [scheduleToCancel.id],
+                }),
+              }
+            );
+
+            if (!deleteScheduleResponse.ok) {
+              const errorText = await deleteScheduleResponse.text();
+              console.error("포트원 스케줄 취소 실패:", errorText);
+              // 스케줄 취소 실패는 로그만 남기고 성공 응답 반환 (취소 저장은 성공했으므로)
+            } else {
+              console.log("다음 달 구독 예약 취소 성공");
+            }
+          } else {
+            console.log("취소할 스케줄을 찾을 수 없습니다.");
+          }
+        } catch (error) {
+          console.error("포트원 예약 정보 조회 실패:", error);
+          // 조회 실패는 로그만 남기고 계속 진행
+        }
+      } else {
+        console.log(
+          "next_schedule_id 또는 billingKey가 없어 구독 예약 취소를 건너뜁니다."
+        );
+      }
+
+      // 성공 응답 반환
+      return NextResponse.json({
+        success: true,
+        message: "결제 취소 처리 완료",
+        payment: cancelRecord,
+      });
+    }
+
+    // 5. 성공 응답 반환
     return NextResponse.json({
       success: true,
     });
