@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import supabaseClient from "@/commons/providers/supabase/supabase.client";
 
 /**
  * 구독 취소 Hook
@@ -19,11 +20,21 @@ export function usePaymentCancel() {
       setIsLoading(true);
       setError(null);
 
-      // 1. 구독 취소 API 호출
+      // 1. 세션 토큰 가져오기
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("로그인이 필요합니다.");
+      }
+
+      // 2. 구독 취소 API 호출 (인증 토큰 포함)
       const response = await fetch("/api/payments/cancel", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`, // 인증 토큰 추가
         },
         body: JSON.stringify({
           transactionKey,
@@ -32,12 +43,12 @@ export function usePaymentCancel() {
 
       const data = await response.json();
 
-      // 2. 응답 처리
+      // 3. 응답 처리
       if (!data.success) {
         throw new Error(data.error || "구독 취소에 실패했습니다.");
       }
 
-      // 3. 성공 시 처리
+      // 4. 성공 시 처리
       alert("구독이 취소되었습니다.");
       router.push("/magazines");
       

@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. 결제가능여부 검증: 인가된 user_id === customer.id
-    if (user.id !== customer.id) {
+    // 3. 결제가능여부 검증: 인가된 user_id === customer.id === customData
+    if (user.id !== customer.id || user.id !== customData) {
       return NextResponse.json(
         { success: false, error: "본인의 결제만 처리할 수 있습니다." },
         { status: 403 }
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
           amount: {
             total: amount,
           },
-          customData: customData, // 로그인된 user_id
+          customData: customData, // 요청에서 받은 user_id
           currency: "KRW",
         }),
       }

@@ -162,19 +162,30 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // 2-2. 시간 계산
+      // 2-2. 시간 계산 (한국시간 기준)
       const now = new Date();
       const startAt = now;
       const endAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30일
-      const endGraceAt = new Date(now.getTime() + 31 * 24 * 60 * 60 * 1000); // +31일
 
-      // next_schedule_at: end_at + 1일 UTC 오전 1시~2시 사이 임의 시각
-      const nextScheduleBase = new Date(endAt.getTime() + 24 * 60 * 60 * 1000); // end_at + 1일
-      nextScheduleBase.setUTCHours(1, 0, 0, 0); // UTC 오전 1시로 설정
+      // 한국시간(KST)은 UTC+9
+      const koreaTimeOffset = 9 * 60 * 60 * 1000; // UTC+9 (밀리초)
+
+      // end_grace_at: end_at + 1일 밤 11:59:59(한국시간 기준) => UTC로 변환하여 저장
+      const endAtKorea = new Date(endAt.getTime() + koreaTimeOffset); // end_at을 한국시간으로 변환
+      const endGraceAtKorea = new Date(endAtKorea);
+      endGraceAtKorea.setUTCDate(endGraceAtKorea.getUTCDate() + 1); // +1일
+      endGraceAtKorea.setUTCHours(23, 59, 59, 999); // 밤 11:59:59
+      const endGraceAt = new Date(endGraceAtKorea.getTime() - koreaTimeOffset); // UTC로 변환
+
+      // next_schedule_at: end_at + 1일 오전 10시~11시(한국시간 기준) 사이 임의 시각 => UTC로 변환하여 저장
+      const nextScheduleBaseKorea = new Date(endAtKorea);
+      nextScheduleBaseKorea.setUTCDate(nextScheduleBaseKorea.getUTCDate() + 1); // +1일
+      nextScheduleBaseKorea.setUTCHours(10, 0, 0, 0); // 오전 10시
       const randomMinutes = Math.floor(Math.random() * 60); // 0~59분 사이 랜덤
-      const nextScheduleAt = new Date(
-        nextScheduleBase.getTime() + randomMinutes * 60 * 1000
+      const nextScheduleAtKorea = new Date(
+        nextScheduleBaseKorea.getTime() + randomMinutes * 60 * 1000
       );
+      const nextScheduleAt = new Date(nextScheduleAtKorea.getTime() - koreaTimeOffset); // UTC로 변환
 
       // next_schedule_id: 동기화되는 UUID 생성 (payment_id 기반)
       // payment_id를 기반으로 일관된 UUID 생성 (랜덤이 아닌 동기화되는 값)

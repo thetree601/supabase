@@ -17,10 +17,18 @@ export function usePaymentStatus() {
         setIsLoading(true);
         setError(null);
 
-        // 1. payment 테이블에서 모든 레코드 조회
+        // 1-1) 로그인된 사용자 정보 확인
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+        
+        if (authError || !user) {
+          throw new Error(authError?.message || "로그인이 필요합니다.");
+        }
+
+        // 1-2) payment 테이블에서 내 결제 정보만 조회 (user_id 필터링)
         const { data: payments, error: selectError } = await supabaseClient
           .from("payment")
           .select("*")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
         if (selectError) {
