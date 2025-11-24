@@ -5,11 +5,15 @@ import { useRouter } from 'next/navigation';
 import styles from './styles.module.css';
 import { useMagazinesBinding } from './hooks/index.binding.hook';
 import { useLoginLogoutStatus } from '@/app/magazines/index.login.logout.status.hook';
+import { useSubscribeGuard } from '@/app/magazines/index.guard.subscribe.hook';
+import { useGuardAuth } from '@/app/magazines/index.guard.auth.hook';
 
 export default function Magazines() {
   const router = useRouter();
   const { magazines, loading, error, goToDetail } = useMagazinesBinding();
   const { isLoggedIn, navigateToLogin, handleLogout, profileImage, name, navigateToMyPage } = useLoginLogoutStatus();
+  const { checkSubscription } = useSubscribeGuard();
+  const { guardAuthAction } = useGuardAuth();
   
   const getCategoryBadgeBg = (category: string): string => {
     const key = (category || '').trim().toLowerCase();
@@ -63,7 +67,11 @@ export default function Magazines() {
     return enToKo[key] ?? original;
   };
   
-  const handleWriteClick = () => {
+  const handleWriteClick = async () => {
+    const isSubscribed = await checkSubscription();
+    if (!isSubscribed) {
+      return; // 비구독시 작업 중단
+    }
     router.push('/magazines/new');
   };
 
@@ -132,7 +140,11 @@ export default function Magazines() {
             </button>
             <button 
               className={styles.subscribeButton}
-              onClick={() => router.push('/subscribe')}
+              onClick={() => {
+                if (guardAuthAction()) {
+                  router.push('/subscribe');
+                }
+              }}
             >
               <Image src="/icons/subscribe.png" alt="구독하기" width={18} height={18} className={styles.buttonIcon} />
               구독하기
@@ -148,7 +160,13 @@ export default function Magazines() {
       <div className={styles.main}>
         <div className={styles.magazinesGrid}>
           {magazines.map((magazine) => (
-            <article key={magazine.id} className={styles.article} onClick={() => goToDetail(magazine.id)}>
+            <article key={magazine.id} className={styles.article} onClick={async () => {
+              const isSubscribed = await checkSubscription();
+              if (!isSubscribed) {
+                return; // 비구독시 작업 중단
+              }
+              goToDetail(magazine.id);
+            }}>
               <div className={styles.articleImageContainer}>
                 {magazine.category && (
                   <div

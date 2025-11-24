@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from "next/navigation";
+import { supabaseClient } from "@/commons/providers/supabase/supabase.client";
 
 declare global {
   interface Window {
@@ -31,7 +32,18 @@ export const usePayment = () => {
    */
   const handleSubscribe = async () => {
     try {
-      // 1. 환경 변수 확인
+      // 1. 로그인된 사용자 정보 가져오기
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseClient.auth.getUser();
+
+      if (userError || !user) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
+      // 2. 환경 변수 확인
       const storeId = process.env.NEXT_PUBLIC_PORTONE_STORE_ID;
       const channelKey = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY;
 
@@ -40,7 +52,7 @@ export const usePayment = () => {
         return;
       }
 
-      // 2. PortOne SDK 확인 및 로드 대기
+      // 3. PortOne SDK 확인 및 로드 대기
       let retryCount = 0;
       const maxRetries = 10; // 최대 1초 대기 (100ms × 10)
       while (!window.PortOne && retryCount < maxRetries) {
@@ -57,14 +69,14 @@ export const usePayment = () => {
         return;
       }
 
-      // 3. 빌링키 발급 요청
+      // 4. 빌링키 발급 요청
       const issueResponse = await window.PortOne.requestIssueBillingKey({
         storeId,
         channelKey,
         billingKeyMethod: "CARD",
       });
 
-      // 4. 빌링키 발급 실패 처리
+      // 5. 빌링키 발급 실패 처리
       if (issueResponse.code || !issueResponse.billingKey) {
         alert(
           `빌링키 발급에 실패했습니다: ${
@@ -74,25 +86,32 @@ export const usePayment = () => {
         return;
       }
 
-      // 5. 빌링키로 결제 API 요청
+      // 6. 세션 토큰 가져오기
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
+
+      // 7. 빌링키로 결제 API 요청
       const paymentApiResponse = await fetch("/api/payments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`, // 인증 토큰 추가
         },
         body: JSON.stringify({
           billingKey: issueResponse.billingKey,
           orderName: "IT 매거진 월간 구독",
           amount: 9900,
           customer: {
-            id: `customer_${Date.now()}`, // 실제로는 로그인한 사용자 ID를 사용해야 함
+            id: user.id, // 로그인한 사용자 ID 사용
           },
+          customData: user.id, // 필수: 로그인된 user_id 추가
         }),
       });
 
       const paymentResult = await paymentApiResponse.json();
 
-      // 6. 결제 실패 처리
+      // 8. 결제 실패 처리
       if (!paymentResult.success) {
         alert(
           `결제에 실패했습니다: ${
@@ -102,7 +121,7 @@ export const usePayment = () => {
         return;
       }
 
-      // 7. 결제 성공 처리
+      // 9. 결제 성공 처리
       alert("구독에 성공하였습니다.");
       router.push("/magazines");
     } catch (error) {
