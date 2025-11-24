@@ -4,10 +4,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './styles.module.css';
 import { useMagazinesBinding } from './hooks/index.binding.hook';
+import { useLoginLogoutStatus } from '@/app/magazines/index.login.logout.status.hook';
 
 export default function Magazines() {
   const router = useRouter();
   const { magazines, loading, error, goToDetail } = useMagazinesBinding();
+  const { isLoggedIn, navigateToLogin, handleLogout, profileImage, name, navigateToMyPage } = useLoginLogoutStatus();
   
   const getCategoryBadgeBg = (category: string): string => {
     const key = (category || '').trim().toLowerCase();
@@ -106,10 +108,24 @@ export default function Magazines() {
             <p className={styles.subtitle}>최신 기술 트렌드와 인사이트를 전합니다</p>
           </div>
           <div className={styles.headerActions}>
-            <button className={styles.loginButton}>
-              <Image src="/icons/login.png" alt="로그인" width={18} height={18} className={styles.buttonIcon} />
-              로그인
-            </button>
+            {isLoggedIn ? (
+              <>
+                <button className={styles.loginButton} onClick={navigateToMyPage}>
+                  {profileImage && (
+                    <Image src={profileImage} alt="프로필" width={18} height={18} className={styles.buttonIcon} style={{ borderRadius: '50%' }} />
+                  )}
+                  {name || '마이페이지'}
+                </button>
+                <button className={styles.loginButton} onClick={handleLogout}>
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <button className={styles.loginButton} onClick={navigateToLogin}>
+                <Image src="/icons/login.png" alt="로그인" width={18} height={18} className={styles.buttonIcon} />
+                로그인
+              </button>
+            )}
             <button className={styles.writeButton} onClick={handleWriteClick}>
               <Image src="/icons/write.png" alt="글쓰기" width={18} height={18} className={styles.buttonIcon} />
               글쓰기

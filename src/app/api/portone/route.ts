@@ -127,20 +127,23 @@ export async function POST(request: NextRequest) {
       const billingKey = paymentInfo.billingKey;
       const orderName = paymentInfo.order?.name || paymentInfo.orderName;
       const customerId = paymentInfo.customer?.id;
+      const userId = paymentInfo.customData; // 로그인된 user_id
       
       console.log("추출된 데이터:", {
         amount,
         billingKey,
         orderName,
         customerId,
+        userId,
       });
 
-      if (!amount || !billingKey || !orderName || !customerId) {
+      if (!amount || !billingKey || !orderName || !customerId || !userId) {
         console.error("결제 정보 필수 데이터 누락:", {
           amount,
           billingKey,
           orderName,
           customerId,
+          userId,
           paymentInfo,
         });
         return NextResponse.json(
@@ -152,6 +155,7 @@ export async function POST(request: NextRequest) {
               billingKey: !billingKey,
               orderName: !orderName,
               customerId: !customerId,
+              userId: !userId,
             },
           },
           { status: 400 }
@@ -192,6 +196,7 @@ export async function POST(request: NextRequest) {
         end_grace_at: endGraceAt.toISOString(),
         next_schedule_at: nextScheduleAt.toISOString(),
         next_schedule_id: nextScheduleId,
+        user_id: userId, // 결제정보.customData
       };
       
       console.log("Supabase 저장 시도:", insertData);
@@ -236,6 +241,7 @@ export async function POST(request: NextRequest) {
               amount: {
                 total: amount,
               },
+              customData: userId, // 결제정보.customData
               currency: "KRW",
             },
             timeToPay: nextScheduleAt.toISOString(),
@@ -345,6 +351,7 @@ export async function POST(request: NextRequest) {
           end_grace_at: existingPayment.end_grace_at,
           next_schedule_at: existingPayment.next_schedule_at,
           next_schedule_id: existingPayment.next_schedule_id,
+          user_id: existingPayment.user_id, // 조회결과.user_id
         })
         .select()
         .single();

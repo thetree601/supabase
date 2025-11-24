@@ -3,29 +3,11 @@
 import { useRouter } from "next/navigation";
 import { usePaymentCancel } from "./hooks/index.payment.cancel.hook";
 import { usePaymentStatus } from "./hooks/index.payment.status.hook";
-
-interface UserProfile {
-  profileImage: string;
-  nickname: string;
-  bio: string;
-  subscriptionStatus: "subscribed" | "unsubscribed";
-  joinDate: string;
-  transactionKey?: string; // 포트원 거래 키
-}
-
-const mockUserData: UserProfile = {
-  profileImage: "https://images.unsplash.com/photo-1613145997970-db84a7975fbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9maWxlJTIwcG9ydHJhaXQlMjBwZXJzb258ZW58MXx8fHwxNzYyNTkxMjU5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-  nickname: "테크러버",
-  bio: "최신 IT 트렌드와 개발 이야기를 공유합니다",
-  subscriptionStatus: "subscribed",
-  joinDate: "2024.03",
-  // 실제로는 결제 완료 시 받은 transactionKey를 저장하여 사용
-  transactionKey: "payment_1762829383600_ytrmopi"
-};
+import { useProfile } from "./hooks/index.profile.hook";
 
 function GlossaryMagazinesMypage() {
   const router = useRouter();
-  const user = mockUserData;
+  const { profile, isLoading: isProfileLoading, error: profileError } = useProfile();
   const { cancelPayment, isLoading: isCancelLoading } = usePaymentCancel();
   const { subscriptionStatus, transactionKey, isLoading: isStatusLoading } = usePaymentStatus();
 
@@ -62,7 +44,30 @@ function GlossaryMagazinesMypage() {
 
   // hook에서 가져온 구독 상태 사용 (로딩 중이면 기본값 "free" 사용)
   const isSubscribed = !isStatusLoading && subscriptionStatus === "subscribed";
-  const isLoading = isStatusLoading || isCancelLoading;
+  const isLoading = isStatusLoading || isCancelLoading || isProfileLoading;
+
+  // 프로필 로딩 중
+  if (isProfileLoading) {
+    return (
+      <div className="mypage-wrapper">
+        <div style={{ padding: "2rem", textAlign: "center" }}>로딩 중...</div>
+      </div>
+    );
+  }
+
+  // 프로필 에러 또는 프로필 없음
+  if (profileError || !profile) {
+    return (
+      <div className="mypage-wrapper">
+        <div style={{ padding: "2rem", textAlign: "center" }}>
+          프로필을 불러올 수 없습니다: {profileError || "로그인이 필요합니다."}
+        </div>
+      </div>
+    );
+  }
+
+  // 프로필 이미지가 없을 경우 기본 이미지 사용
+  const profileImage = profile.profileImage || "https://via.placeholder.com/150";
 
   return (
     <div className="mypage-wrapper">
@@ -82,13 +87,13 @@ function GlossaryMagazinesMypage() {
         {/* 프로필 카드 */}
         <div className="mypage-profile-card">
           <img 
-            src={user.profileImage} 
-            alt={user.nickname}
+            src={profileImage} 
+            alt={profile.name}
             className="mypage-avatar"
           />
-          <h2 className="mypage-name">{user.nickname}</h2>
-          <p className="mypage-bio-text">{user.bio}</p>
-          <div className="mypage-join-date">가입일 {user.joinDate}</div>
+          <h2 className="mypage-name">{profile.name}</h2>
+          <p className="mypage-bio-text">{profile.email}</p>
+          <div className="mypage-join-date">가입일 {profile.joinDate}</div>
         </div>
 
         {/* 구독 플랜 카드 */}

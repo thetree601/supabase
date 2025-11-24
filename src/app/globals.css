@@ -566,3 +566,287 @@ body {
     color: #d1d5db;
   }
 }
+
+/* Login Page Styles */
+.magazine-login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #f9fafb;
+}
+
+.magazine-login-box {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+}
+
+.magazine-login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.magazine-login-header h1 {
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+.magazine-login-subtitle {
+  font-size: 0.9375rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.magazine-login-divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.magazine-login-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.magazine-login-divider span {
+  position: relative;
+  display: inline-block;
+  padding: 0 1rem;
+  background: white;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.magazine-login-google-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.875rem 2rem;
+  background: white;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.magazine-login-google-button:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.magazine-login-google-button:active {
+  transform: translateY(1px);
+}
+
+.magazine-login-browse-button {
+  width: 100%;
+  padding: 0.875rem 2rem;
+  background: transparent;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.magazine-login-browse-button:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.magazine-login-browse-button:active {
+  transform: translateY(1px);
+}
+
+.magazine-login-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.magazine-login-link {
+  color: #374151;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.magazine-login-link:hover {
+  color: #111827;
+  text-decoration: underline;
+}
+
+.magazine-login-icon-container {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.magazine-login-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: #f3f4f6;
+  border-radius: 20px;
+  color: #374151;
+}
+
+.magazine-login-description {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+.magazine-login-social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.magazine-login-footer-text {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.magazine-login-features {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.magazine-login-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.magazine-login-feature-item svg {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+@media (max-width: 640px) {
+  .magazine-login-container {
+    padding: 1rem;
+  }
+
+  .magazine-login-box {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .magazine-login-container {
+    background: #0a0a0a;
+  }
+
+  .magazine-login-box {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    box-shadow: none;
+  }
+
+  .magazine-login-header h1 {
+    color: #ededed;
+  }
+
+  .magazine-login-subtitle {
+    color: #9ca3af;
+  }
+
+  .magazine-login-divider::before {
+    background: #333;
+  }
+
+  .magazine-login-divider span {
+    background: #1a1a1a;
+    color: #6b7280;
+  }
+
+  .magazine-login-google-button {
+    background: #0a0a0a;
+    border-color: #333;
+    color: #d1d1d1;
+  }
+
+  .magazine-login-google-button:hover {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  .magazine-login-browse-button {
+    background: transparent;
+    border-color: #333;
+    color: #d1d1d1;
+  }
+
+  .magazine-login-browse-button:hover {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  .magazine-login-footer {
+    color: #9ca3af;
+  }
+
+  .magazine-login-link {
+    color: #d1d1d1;
+  }
+
+  .magazine-login-link:hover {
+    color: #ededed;
+  }
+
+  .magazine-login-icon {
+    background: #0a0a0a;
+    color: #d1d1d1;
+  }
+
+  .magazine-login-description {
+    color: #6b7280;
+  }
+
+  .magazine-login-footer-text {
+    color: #6b7280;
+  }
+
+  .magazine-login-features {
+    border-top-color: #333;
+  }
+
+  .magazine-login-feature-item {
+    color: #9ca3af;
+  }
+
+  .magazine-login-feature-item svg {
+    color: #6b7280;
+  }
+}

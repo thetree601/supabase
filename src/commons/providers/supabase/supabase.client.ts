@@ -29,6 +29,25 @@ export const supabaseClient = (() => {
 
 export default supabaseClient;
 
+export interface Magazine {
+  id?: string;
+  category: string;
+  title: string;
+  description: string;
+  content: string;
+  tags: string[] | null;
+  image_url?: string;
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+
+
+
+
+
+
 
 
 

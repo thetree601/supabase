@@ -92,6 +92,14 @@ export function useMagazineSubmit() {
       return;
     }
 
+    // Step 0: 로그인된 사용자 정보 가져오기
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    
+    if (userError || !user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
     const payload = {
       image_url: imageUrl,
       category: input.category,
@@ -99,7 +107,8 @@ export function useMagazineSubmit() {
       description: input.introduce,
       content: input.content,
       tags: buildTags(input.tag),
-    } satisfies Omit<MagazineRow, 'id'>;
+      user_id: user.id, // 로그인된 user_id
+    } satisfies Omit<MagazineRow, 'id'> & { user_id?: string };
 
     // 2) 테이블 insert (supabase-js 사용)
     const { data: rows, error: insertError } = await supabaseClient
